@@ -816,3 +816,131 @@ footer {
     transition-duration: .01ms !important;
   }
 }
+
+/* Legal pages */
+.legal-links {
+  display: flex;
+  gap: 22px;
+}
+
+.legal-links a,
+.legal-back {
+  text-decoration: underline;
+  text-decoration-color: rgba(240, 75, 47, .65);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+
+.legal-links a:hover,
+.legal-links a:focus-visible,
+.legal-back:hover,
+.legal-back:focus-visible {
+  color: var(--white);
+  text-decoration-color: var(--orange);
+}
+
+.legal-page {
+  min-height: 100svh;
+  background: var(--paper);
+}
+
+.legal-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--cream);
+}
+
+.legal-header .site-header {
+  height: 96px;
+}
+
+.legal-header nav a:first-child {
+  display: inline-block;
+}
+
+.legal-content {
+  width: min(100% - 80px, 920px);
+  margin-inline: auto;
+  padding-block: clamp(80px, 10vw, 140px);
+}
+
+.legal-content .eyebrow {
+  margin-bottom: 22px;
+}
+
+.legal-content h1 {
+  margin-bottom: 64px;
+  font-size: clamp(3.7rem, 8vw, 7.4rem);
+}
+
+.legal-content h2 {
+  margin: 58px 0 18px;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -.035em;
+}
+
+.legal-content h3 {
+  margin: 34px 0 12px;
+  font-size: 1.15rem;
+}
+
+.legal-content p,
+.legal-content li {
+  color: #4e554f;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.legal-content p {
+  margin: 0 0 18px;
+}
+
+.legal-content ul {
+  margin: 0 0 22px;
+  padding-left: 1.25rem;
+}
+
+.legal-content a {
+  color: var(--forest);
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: var(--orange);
+  text-underline-offset: 4px;
+}
+
+.legal-block {
+  padding: 28px 30px;
+  border-left: 4px solid var(--orange);
+  background: var(--cream);
+}
+
+.legal-note {
+  margin-top: 70px !important;
+  padding-top: 25px;
+  border-top: 1px solid var(--line);
+  color: #7b807b !important;
+  font-size: .82rem !important;
+}
+
+.legal-footer .footer-main {
+  padding-block: 50px;
+}
+
+@media (max-width: 720px) {
+  .legal-content {
+    width: min(100% - 36px, 920px);
+    padding-block: 70px 90px;
+  }
+
+  .legal-content h1 {
+    margin-bottom: 48px;
+  }
+
+  .legal-block {
+    padding: 24px 22px;
+  }
+
+  .legal-links {
+    gap: 16px;
+  }
+}
