@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: data: https://hoapjescptzslmyblsiy.supabase.co; connect-src https://hoapjescptzslmyblsiy.supabase.co; form-action 'self'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="ZeltTracker Online: freiwillige 18+-Community, Tischservice und anonymisierte Wiesn-Lage.">
+  <meta name="theme-color" content="#10281e">
+  <title>ZeltTracker Online</title>
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+<a class="skip" href="#portal-main">Zum Inhalt</a>
+<div id="app" class="app-shell">
+  <header class="topbar">
+    <a class="portal-brand" href="index.html" aria-label="Zur ZeltTracker-Startseite">
+      <span class="brand-mark" aria-hidden="true">ZT</span>
+      <span>ZeltTracker <small>ONLINE</small></span>
+    </a>
+    <div class="status-cluster">
+      <span id="connection-status" class="connection" role="status">Bereit</span>
+      <button id="account-button" class="icon-button" type="button" aria-label="Konto öffnen">◉</button>
+    </div>
+  </header>
+
+  <main id="portal-main" tabindex="-1">
+    <section id="view-home" class="view active" data-view="home" aria-labelledby="home-title">
+      <div class="portal-hero">
+        <p class="eyebrow">Ohne App-Update · live im Browser</p>
+        <h1 id="home-title">Servus.<br>Was steht an?</h1>
+        <p>Community, Tischservice und Wiesn-Lage als eigenständiger Online-Service. Die eingereichte App-Version 1.0 bleibt unverändert.</p>
+      </div>
+      <div class="feature-grid">
+        <button class="feature-card feature-zam" type="button" data-go="zam">
+          <span class="feature-icon" aria-hidden="true">♡</span>
+          <span><strong>Zam</strong><small>Menschen treffen – freiwillig, 18+ und moderiert.</small></span>
+          <span aria-hidden="true">→</span>
+        </button>
+        <button class="feature-card" type="button" data-go="service">
+          <span class="feature-icon" aria-hidden="true">⌁</span>
+          <span><strong>Tischservice</strong><small>Anfragen am Tisch und das Portal fürs Bedienungsteam.</small></span>
+          <span aria-hidden="true">→</span>
+        </button>
+        <button class="feature-card" type="button" data-go="lage">
+          <span class="feature-icon" aria-hidden="true">◌</span>
+          <span><strong>Wiesn-Lage</strong><small>Vorsichtige 30-Minuten-Tendenz; Kamerasignale erst nach Betriebsfreigabe – keine Livebilder.</small></span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <aside class="trust-card">
+        <strong>Klare Grenzen</strong>
+        <p>Keine Gesichtserkennung, kein individuelles Tracking, keine Einlassgarantie und keine verbindliche Bestellung. Bei Gefahr immer 110 oder 112.</p>
+      </aside>
+    </section>
+
+    <section id="view-zam" class="view" data-view="zam" aria-labelledby="zam-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">18+ · freiwillig sichtbar</p><h1 id="zam-title">Zam</h1></div>
+        <button class="pill-button" type="button" data-action="edit-profile">Mein Profil</button>
+      </div>
+      <div id="zam-gate" class="gate-card"></div>
+      <div id="zam-content" hidden>
+        <div class="segmented" role="tablist" aria-label="Zam-Bereiche">
+          <button type="button" role="tab" aria-selected="true" data-zam-tab="discover">Entdecken</button>
+          <button type="button" role="tab" aria-selected="false" data-zam-tab="matches">Matches <span id="match-count"></span></button>
+        </div>
+        <div id="discover-panel" class="tab-panel"></div>
+        <div id="matches-panel" class="tab-panel" hidden></div>
+      </div>
+    </section>
+
+    <section id="view-service" class="view" data-view="service" aria-labelledby="service-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">Direkt und unverbindlich</p><h1 id="service-title">Service</h1></div>
+        <button class="pill-button" type="button" data-action="refresh-service">Aktualisieren</button>
+      </div>
+      <div id="service-gate" class="gate-card"></div>
+      <div id="service-content" hidden>
+        <div class="segmented" role="tablist" aria-label="Service-Bereiche">
+          <button type="button" role="tab" aria-selected="true" data-service-tab="guest">Am Tisch</button>
+          <button type="button" role="tab" aria-selected="false" data-service-tab="team">Mein Team</button>
+        </div>
+        <div id="guest-panel" class="tab-panel"></div>
+        <div id="team-panel" class="tab-panel" hidden></div>
+      </div>
+    </section>
+
+    <section id="view-lage" class="view" data-view="lage" aria-labelledby="lage-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">Datensparsam statt Dauerbeobachtung</p><h1 id="lage-title">Wiesn-Lage</h1></div>
+        <button class="pill-button" type="button" data-action="refresh-signals">Aktualisieren</button>
+      </div>
+      <div id="forecast-panel" class="forecast-panel" aria-live="polite"></div>
+      <div id="signal-summary" class="signal-summary" aria-live="polite"></div>
+      <div id="signal-list" class="signal-list"></div>
+      <aside class="info-card">
+        <h2>Was diese Werte bedeuten</h2>
+        <p>Der Prognosepool gewichtet gültige Platzmeldungen und ein schwaches Zeitmuster; frische Dichtesignale und deren Verlauf kommen erst nach der noch ausstehenden Betriebsfreigabe hinzu. Die vorbereitete Bildverarbeitung zählt dann ausschließlich anonyme Personen-Boxen in festgelegten Bildbereichen und verwirft jedes Einzelbild direkt nach der Auswertung. Das Ergebnis ist nur eine Gelände-Tendenz – keine Zeltbelegung, Wartezeit, Einlassauskunft oder Garantie.</p>
+      </aside>
+    </section>
+
+    <section id="view-account" class="view" data-view="account" aria-labelledby="account-title">
+      <div class="section-heading"><div><p class="eyebrow">Deine Entscheidung</p><h1 id="account-title">Konto</h1></div></div>
+      <div id="account-panel"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Online-Service">
+    <button type="button" class="active" data-go="home"><span aria-hidden="true">⌂</span><small>Start</small></button>
+    <button type="button" data-go="zam"><span aria-hidden="true">♡</span><small>Zam</small></button>
+    <button type="button" data-go="service"><span aria-hidden="true">⌁</span><small>Service</small></button>
+    <button type="button" data-go="lage"><span aria-hidden="true">◌</span><small>Lage</small></button>
+  </nav>
+</div>
+
+<dialog id="modal" aria-labelledby="modal-title">
+  <div class="modal-head"><h2 id="modal-title">Dialog</h2><button class="icon-button" type="button" data-close-modal aria-label="Schließen">×</button></div>
+  <div id="modal-body"></div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<noscript><p class="noscript">Für den Online-Service muss JavaScript aktiviert sein. Die Informationsseiten und Support-Kontakte bleiben ohne JavaScript erreichbar.</p></noscript>
+<script type="module" src="portal.js?v=20260920"></script>
+</body>
+</html>

@@ -40,6 +40,7 @@ p { margin: .65rem 0 1.15rem; }
 .card h2 { margin-top: 0; }
 .card p:last-child { margin-bottom: 0; }
 .button { display: inline-flex; align-items: center; min-height: 48px; padding: .75rem 1.3rem; background: var(--ink); color: var(--canvas); font-weight: 750; border-radius: 99px; text-decoration: none; }
+.button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); margin-left: .4rem; }
 .article { max-width: 48rem; }
 .article section { margin-block: 2rem; }
 .article section + section { border-top: 1px solid var(--line); padding-top: 1rem; }
