@@ -1,4 +1,4 @@
-import { PortalClient, PortalError, buildProfilePayload, cameraSignalState, forecastState, formatMoney, normalizedServiceCode, normalizedTeamCode, safeReturnPath } from "./portal-core.mjs?v=20260920";
+import { PortalClient, PortalError, buildProfilePayload, cameraSignalState, forecastState, formatMoney, normalizedServiceCode, normalizedTeamCode, safeReturnPath } from "./portal-core.mjs?v=20260920-2";
 
 const client = new PortalClient();
 const authRedirect = client.consumeAuthRedirect(location.href);

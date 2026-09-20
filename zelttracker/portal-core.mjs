@@ -243,21 +243,22 @@ export class PortalClient {
     return value.data;
   }
 
-  async signals() {
-    const response = await this.fetchImpl(`${this.config.supabaseURL}/functions/v1/camera-signals`, {
-      headers: { apikey: this.config.publishableKey },
-    });
-    const value = await this.decode(response);
-    return value.data;
+  async publicRead(namespace, retry = true) {
+    try {
+      const response = await this.fetchImpl(`${this.config.supabaseURL}/functions/v1/${namespace}`, {
+        headers: { apikey: this.config.publishableKey },
+      });
+      if (retry && response.status >= 500) return await this.publicRead(namespace, false);
+      const value = await this.decode(response);
+      return value.data;
+    } catch (error) {
+      if (retry) return await this.publicRead(namespace, false);
+      throw error;
+    }
   }
 
-  async forecast() {
-    const response = await this.fetchImpl(`${this.config.supabaseURL}/functions/v1/forecast`, {
-      headers: { apikey: this.config.publishableKey },
-    });
-    const value = await this.decode(response);
-    return value.data;
-  }
+  signals() { return this.publicRead("camera-signals"); }
+  forecast() { return this.publicRead("forecast"); }
 
   async signOut() {
     const access = this.session?.access_token;
