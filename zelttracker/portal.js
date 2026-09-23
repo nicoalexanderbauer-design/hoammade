@@ -983,7 +983,7 @@ async function showModeration() {
   showModal("Moderation", wrapper);
   const load = async () => {
     const [reports, photos] = await Promise.all([
-      client.community("moderation/reports"),
+      client.call("community", "moderation/reports"),
       client.community("moderation/photos"),
     ]);
     clear(content);
@@ -992,9 +992,17 @@ async function showModeration() {
     for (const photo of photos) {
       const card = element("article", { class: "panel-card form-stack" });
       if (photo.photoURL) card.append(element("img", { class: "moderation-photo", src: photo.photoURL, alt: `Zu prüfendes Profilbild von ${photo.displayName}` }));
-      card.append(element("strong", { text: photo.displayName }), element("div", { class: "button-row" }, [
-        primary("Freigeben", async () => { await client.community("moderation/photos", { method: "POST", body: { targetID: photo.id, approve: true } }); await load(); }),
-        secondary("Ablehnen", async () => { await client.community("moderation/photos", { method: "POST", body: { targetID: photo.id, approve: false } }); await load(); }),
+      const decidePhoto = async approve => {
+        try {
+          await client.community("moderation/photos", { method: "POST", body: {
+            targetID: photo.id, approve, slot: photo.slot ?? 1, photoRevision: photo.photoRevision,
+          } });
+        } catch (error) { handleError(error); }
+        await load();
+      };
+      card.append(element("strong", { text: `${photo.displayName} · Bild ${photo.slot ?? 1}` }), element("div", { class: "button-row" }, [
+        primary("Freigeben", () => decidePhoto(true).catch(handleError)),
+        secondary("Ablehnen", () => decidePhoto(false).catch(handleError)),
       ]));
       content.append(card);
     }
@@ -1005,6 +1013,8 @@ async function showModeration() {
         element("strong", { text: report.reason }),
         element("p", { text: report.detail || "Keine zusätzlichen Angaben." }),
         ...(report.contentSnapshot ? [element("p", { class: "muted", text: `Nachweis: ${report.contentSnapshot}` })] : []),
+        ...(report.imageURL ? [element("img", { class: "moderation-photo", src: report.imageURL,
+          alt: "Gemeldetes privates Chatbild" })] : []),
       ]);
       const decide = async action => { await client.community("moderation/actions", { method: "POST", body: { reportID: report.id, action } }); await load(); };
       card.append(element("div", { class: "button-row" }, [primary("Inhalt entfernen", () => decide("remove_content").catch(handleError)), secondary("Abweisen", () => decide("dismiss").catch(handleError)), element("button", { class: "danger-button", type: "button", onclick: () => decide("suspend_user").catch(handleError) }, "Konto sperren")]));
