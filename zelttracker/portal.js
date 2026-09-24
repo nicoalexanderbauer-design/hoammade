@@ -1,4 +1,4 @@
-import { PortalClient, PortalError, buildProfilePayload, cameraSignalState, forecastState, formatMoney, normalizedServiceCode, normalizedTeamCode, safeReturnPath } from "./portal-core.mjs?v=20260920-2";
+import { PortalClient, PortalError, buildProfilePayload, cameraSignalState, forecastState, formatMoney, normalizedServiceCode, normalizedTeamCode, safeReturnPath } from "./portal-core.mjs?v=20260924-1";
 
 const client = new PortalClient();
 const authRedirect = client.consumeAuthRedirect(location.href);
@@ -510,9 +510,16 @@ async function showChat(match) {
   wrapper.append(log, form);
   showModal(`Chat mit ${match.profile.displayName}`, wrapper);
   const load = async () => {
-    const messages = await client.community("messages", { query: { matchID: match.id } });
+    const messages = await client.call("community", "messages", { query: { matchID: match.id } });
     clear(log);
-    for (const message of messages) log.append(element("div", { class: `bubble${message.senderID === client.session?.user?.id ? " mine" : ""}`, text: message.body }));
+    for (const message of messages) {
+      const bubble = element("div", { class: `bubble${message.senderID === client.session?.user?.id ? " mine" : ""}` });
+      bubble.append(element("span", { text: message.body }));
+      if (message.imageURL) bubble.append(element("img", {
+        class: "chat-image", src: message.imageURL, alt: "Freigegebenes Chatbild", loading: "lazy",
+      }));
+      log.append(bubble);
+    }
     log.scrollTop = log.scrollHeight;
   };
   try { await load(); } catch (error) { result.className = "error"; result.textContent = error.message; }
@@ -635,17 +642,31 @@ function confirmGuestRequest(table, kind, item = null) {
   const wrapper = element("div", { class: "form-stack" });
   const quantity = element("input", { type: "number", min: 1, max: 10, value: 1 });
   const result = element("p", { class: "help-text" });
+  let pendingBody = null;
+  let sending = false;
   wrapper.append(element("p", { text: item ? `${item.name} für ${formatMoney(item.priceCents)} je Stück unverbindlich anfragen?` : (kind === "payment" ? "Dem Team mitteilen, dass du zahlen möchtest?" : "Die Bedienung unverbindlich an den Tisch rufen?") }));
   if (item) wrapper.append(element("label", {}, ["Menge", quantity]));
-  wrapper.append(result, primary("Anfrage jetzt senden", async () => {
+  const submit = primary("Anfrage jetzt senden", async () => {
+    if (sending) return;
+    sending = true;
+    submit.disabled = true;
     try {
-      const body = { requestID: crypto.randomUUID(), kind, code: table.code };
-      if (item) Object.assign(body, { itemID: item.id, quantity: Number(quantity.value), confirmedPriceCents: item.priceCents });
-      const request = await client.service("requests", { method: "POST", body });
+      if (!pendingBody) {
+        const amount = Number(quantity.value);
+        if (item && (!Number.isInteger(amount) || amount < 1 || amount > 10)) {
+          throw new Error("Bitte wähle eine Menge zwischen 1 und 10.");
+        }
+        pendingBody = { requestID: crypto.randomUUID(), kind, code: table.code };
+        if (item) Object.assign(pendingBody, { itemID: item.id, quantity: amount, confirmedPriceCents: item.priceCents });
+        quantity.disabled = true;
+      }
+      const request = await client.service("requests", { method: "POST", body: pendingBody });
       state.guestRequests = [request, ...state.guestRequests.filter(item => item.id !== request.id)];
       closeModal(); renderGuest(); toast("Anfrage gesendet. Das Team muss sie noch annehmen.");
     } catch (error) { result.className = "error"; result.textContent = error.message; }
-  }));
+    finally { sending = false; submit.disabled = false; }
+  });
+  wrapper.append(result, submit);
   showModal("Anfrage bestätigen", wrapper);
 }
 
@@ -987,10 +1008,14 @@ async function showModeration() {
   wrapper.append(content);
   showModal("Moderation", wrapper);
   const load = async () => {
-    const [reports, photos] = await Promise.all([
+    const [reportsResult, photosResult] = await Promise.allSettled([
       client.call("community", "moderation/reports"),
       client.community("moderation/photos"),
     ]);
+    if (reportsResult.status === "rejected") throw reportsResult.reason;
+    if (photosResult.status === "rejected") throw photosResult.reason;
+    const reports = reportsResult.value;
+    const photos = photosResult.value;
     clear(content);
     content.append(element("h3", { text: `Profilbilder (${photos.length})` }));
     if (!photos.length) content.append(element("p", { class: "muted", text: "Keine ausstehenden Profilbilder." }));

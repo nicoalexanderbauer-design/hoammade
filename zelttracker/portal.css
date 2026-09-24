@@ -115,6 +115,7 @@ textarea { min-height: 6rem; resize: vertical; }
 .chat-log { display: flex; flex-direction: column; gap: .6rem; max-height: 48dvh; overflow: auto; padding: .4rem; }
 .bubble { max-width: 85%; padding: .65rem .8rem; border-radius: 1rem; background: var(--surface-2); }
 .bubble.mine { align-self: end; background: var(--lime); color: var(--lime-ink); }
+.chat-image { display: block; width: min(100%, 18rem); max-height: 22rem; margin-top: .4rem; border-radius: .65rem; object-fit: contain; }
 .signal-card { border: 1px solid var(--line); background: var(--surface); border-radius: 1.2rem; padding: 1rem; }
 .forecast-panel { margin-bottom: .85rem; background: linear-gradient(140deg, #274b37, var(--surface) 72%); }
 .forecast-score { display: flex; justify-content: space-between; gap: 1rem; align-items: end; }
