@@ -115,6 +115,7 @@ export class PortalClient {
     this.config = config;
     this.session = this.readSession();
     this.refreshing = null;
+    this.sessionGeneration = 0;
   }
 
   get signedIn() { return Boolean(this.session?.access_token && this.session?.refresh_token); }
@@ -127,15 +128,25 @@ export class PortalClient {
   }
 
   saveSession(value) {
+    this.sessionGeneration += 1;
+    this.refreshing = null;
     this.session = value;
     if (value) this.storage.setItem(this.config.sessionKey, JSON.stringify(value));
     else this.storage.removeItem(this.config.sessionKey);
   }
 
+  assertCurrentToken(token) {
+    if (!this.session || this.session.access_token !== token) {
+      throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
+    }
+  }
+
   async signIn(email, password) {
+    const generation = this.sessionGeneration;
     const data = await this.auth("token?grant_type=password", {
       email: normalizedEmail(email), password: validatedPassword(password),
     });
+    if (this.sessionGeneration !== generation) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
     this.saveSession(data);
     return data;
   }
@@ -176,12 +187,16 @@ export class PortalClient {
 
   async updatePassword(password) {
     const token = await this.token();
+    this.assertCurrentToken(token);
+    const generation = this.sessionGeneration;
     const response = await this.fetchImpl(`${this.config.supabaseURL}/auth/v1/user`, {
       method: "PUT",
       headers: { apikey: this.config.publishableKey, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ password: validatedPassword(password) }),
     });
-    return await this.decode(response);
+    const value = await this.decode(response);
+    if (this.sessionGeneration !== generation) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
+    return value;
   }
 
   async auth(path, body) {
@@ -198,16 +213,29 @@ export class PortalClient {
     const expires = Number(this.session.expires_at ?? 0);
     if (expires > Date.now() / 1000 + 60) return this.session.access_token;
     if (!this.refreshing) {
-      this.refreshing = this.auth("token?grant_type=refresh_token", { refresh_token: this.session.refresh_token })
-        .then(value => { this.saveSession(value); return value.access_token; })
-        .catch(error => { this.saveSession(null); throw error; })
-        .finally(() => { this.refreshing = null; });
+      const generation = this.sessionGeneration;
+      const session = this.session;
+      const stillCurrent = () => this.sessionGeneration === generation && this.session === session;
+      const pending = this.auth("token?grant_type=refresh_token", { refresh_token: session.refresh_token })
+        .then(value => {
+          if (!stillCurrent()) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
+          this.saveSession(value);
+          return value.access_token;
+        })
+        .catch(error => {
+          if (stillCurrent()) this.saveSession(null);
+          throw error;
+        });
+      this.refreshing = pending;
+      void pending.finally(() => { if (this.refreshing === pending) this.refreshing = null; }).catch(() => {});
     }
     return await this.refreshing;
   }
 
   async call(namespace, route, { method = "GET", body, query, retry = true } = {}) {
     const token = await this.token();
+    this.assertCurrentToken(token);
+    const generation = this.sessionGeneration;
     const suffix = query ? `?${new URLSearchParams(query)}` : "";
     const response = await this.fetchImpl(`${this.config.supabaseURL}/functions/v1/${namespace}/${route}${suffix}`, {
       method,
@@ -220,12 +248,15 @@ export class PortalClient {
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
     });
+    if (this.sessionGeneration !== generation) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
     if (response.status === 401 && retry) {
+      this.assertCurrentToken(token);
       this.session.expires_at = 0;
       await this.token();
       return await this.call(namespace, route, { method, body, query, retry: false });
     }
     const value = await this.decode(response);
+    if (this.sessionGeneration !== generation) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
     return value.data;
   }
 
@@ -236,12 +267,15 @@ export class PortalClient {
     if (!(jpeg instanceof Blob) || jpeg.type !== "image/jpeg") throw new PortalError("Bitte wähle ein gültiges JPEG-Profilbild.", 400, "INVALID_PHOTO");
     if (jpeg.size > 3_000_000) throw new PortalError("Das Profilbild darf höchstens 3 MB groß sein.", 413, "PHOTO_TOO_LARGE");
     const token = await this.token();
+    this.assertCurrentToken(token);
+    const generation = this.sessionGeneration;
     const response = await this.fetchImpl(`${this.config.supabaseURL}/functions/v1/online-community/profile-photo`, {
       method: "POST",
       headers: { apikey: this.config.publishableKey, Authorization: `Bearer ${token}`, "Content-Type": "image/jpeg" },
       body: jpeg,
     });
     const value = await this.decode(response);
+    if (this.sessionGeneration !== generation) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
     return value.data;
   }
 
@@ -276,12 +310,15 @@ export class PortalClient {
 
   async deleteAccount() {
     const token = await this.token();
+    this.assertCurrentToken(token);
+    const generation = this.sessionGeneration;
     const response = await this.fetchImpl(`${this.config.supabaseURL}/functions/v1/account-delete`, {
       method: "POST",
       headers: { apikey: this.config.publishableKey, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ confirm: "DELETE" }),
     });
     await this.decode(response);
+    if (this.sessionGeneration !== generation) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
     this.saveSession(null);
   }
 
