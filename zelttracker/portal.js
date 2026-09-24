@@ -431,14 +431,20 @@ function renderDiscover() {
     ]),
   ]);
   let startX = 0;
-  card.addEventListener("pointerdown", event => { startX = event.clientX; card.setPointerCapture(event.pointerId); });
+  card.addEventListener("pointerdown", event => {
+    if (event.target.closest("button, a, input, select, textarea")) return;
+    startX = event.clientX;
+    card.setPointerCapture(event.pointerId);
+  });
   card.addEventListener("pointermove", event => {
     if (!card.hasPointerCapture(event.pointerId)) return;
     const dx = Math.max(-120, Math.min(120, event.clientX - startX));
     card.style.transform = `translateX(${dx}px) rotate(${dx / 24}deg)`;
   });
   card.addEventListener("pointerup", event => {
+    if (!card.hasPointerCapture(event.pointerId)) return;
     const dx = event.clientX - startX;
+    card.releasePointerCapture(event.pointerId);
     card.style.transform = "";
     if (dx > 90) likeProfile(profile);
     else if (dx < -90) dismissProfile(profile.id);
