@@ -214,6 +214,8 @@ export class PortalClient {
       headers: {
         apikey: this.config.publishableKey,
         Authorization: `Bearer ${token}`,
+        ...(namespace === "online-community" || namespace === "community"
+          ? { "X-ZT-Profile-Capability": "persistent-discoverability-v1" } : {}),
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
