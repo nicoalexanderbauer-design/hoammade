@@ -248,7 +248,8 @@ async function ensureProfile() {
 }
 
 function isOnline(profile) {
-  return profile?.onlineUntil && new Date(profile.onlineUntil).getTime() > Date.now();
+  return profile?.persistentDiscoverability === true ||
+    Boolean(profile?.onlineUntil && new Date(profile.onlineUntil).getTime() > Date.now());
 }
 
 async function prepareJPEG(file) {
@@ -377,9 +378,13 @@ async function loadZam() {
     }
     content.hidden = false;
     const online = isOnline(profile);
+    const persistent = profile.persistentDiscoverability === true;
     gateNode.append(element("div", {}, [
       element("h2", { text: online ? "Du bist sichtbar" : "Du bist unsichtbar" }),
-      element("p", { class: "muted", text: online ? "Die Sichtbarkeit endet automatisch. Du kannst sie jederzeit sofort beenden." : "Niemand Neues kann dein Profil gerade entdecken." }),
+      element("p", { class: "muted", text: persistent
+        ? "Dein Profil bleibt auffindbar, bis du die Sichtbarkeit ausschaltest. Das sagt nichts über deine aktuelle Aktivität oder deinen Standort aus."
+        : online ? "Die zeitlich begrenzte Sichtbarkeit endet automatisch. Du kannst sie jederzeit sofort beenden."
+          : "Niemand Neues kann dein Profil gerade entdecken." }),
       primary(online ? "Jetzt unsichtbar werden" : "Für 2 Stunden sichtbar werden", () => updateVisibility(online ? 0 : 120)),
     ]));
     const [discover, matches] = await Promise.all([
