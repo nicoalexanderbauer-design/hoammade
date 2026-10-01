@@ -66,3 +66,11 @@ footer p { font-size: .875rem; color: var(--muted); max-width: 46rem; }
   .wrap { width: 100%; }
   h1 { font-size: 2.2rem; }
 }
+
+/* Website installation controls share the existing information-page design. */
+.app-icon { display: block; border-radius: 1.4rem; margin-bottom: 1.5rem; }
+.install-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; }
+.install-actions .button.ghost { margin-left: 0; }
+button.button { font: inherit; cursor: pointer; }
+button.button:disabled { cursor: wait; opacity: .7; }
+[hidden] { display: none !important; }

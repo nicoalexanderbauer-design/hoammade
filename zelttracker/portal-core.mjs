@@ -57,6 +57,15 @@ export function buildProfilePayload(input, hasProfile) {
   return result;
 }
 
+export function needsProfileSetup(profile) {
+  if (!profile) return true;
+  const name = String(profile.displayName ?? "").trim();
+  return name.length < 2 || name.length > 40 || !Number.isInteger(profile.age)
+    || profile.age < 18 || profile.age > 120
+    || !["friends", "dating", "group", "none"].includes(profile.intent)
+    || profile.termsVersion !== CONFIG.termsVersion;
+}
+
 export function isAdult(birthDate, at = new Date()) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(birthDate));
   if (!match) return false;
@@ -80,19 +89,18 @@ export function formatMoney(cents) {
   return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(Number(cents) / 100);
 }
 
-export function cameraSignalState(signal, now = Date.now()) {
-  const observedAt = Date.parse(String(signal?.observedAt ?? ""));
-  const age = Number(now) - observedAt;
-  const current = Number.isFinite(observedAt) && age >= -120_000 && age < 15 * 60_000;
-  const rawLevel = Number(signal?.densityPercent ?? signal?.occupancyPercent);
-  const level = current && Number.isFinite(rawLevel) ? Math.max(0, Math.min(100, rawLevel)) : 0;
-  return { current, level, observedAt: Number.isFinite(observedAt) ? observedAt : null };
-}
-
 export function forecastState(forecast, now = Date.now()) {
   const generatedAt = Date.parse(String(forecast?.generatedAt ?? ""));
   const age = Number(now) - generatedAt;
-  const current = Number.isFinite(generatedAt) && age >= -120_000 && age < 10 * 60_000;
+  const allowed = forecast?.sourcePolicy === "reports_weather_calendar_v1"
+    && !(Array.isArray(forecast?.contributors) && forecast.contributors.some(item => !["calendar", "community", "weather_pressure", "official_status"].includes(item?.id)))
+    && !(Array.isArray(forecast?.modules) && forecast.modules.some(item => !["forecast-method", "context-weather_pressure", "context-official_status"].includes(item?.id)))
+    && !(Array.isArray(forecast?.cameraSignals) && forecast.cameraSignals.length)
+    && !(Array.isArray(forecast?.areaSources) && forecast.areaSources.length)
+    && !(Array.isArray(forecast?.sources) && forecast.sources.some(item => !["calendar", "community", "weather"].includes(item?.id)))
+    && !(Array.isArray(forecast?.areas) && forecast.areas.length)
+    && !(Array.isArray(forecast?.venueIndicators) && forecast.venueIndicators.some(item => !["community_report", "verified_operator_report"].includes(item?.evidenceKind)));
+  const current = allowed && Number.isFinite(generatedAt) && age >= -120_000 && age < 10 * 60_000;
   const rawScore = Number(forecast?.score);
   const score = current && Number.isFinite(rawScore) ? Math.max(0, Math.min(100, Math.round(rawScore))) : 0;
   return { current, score, isLive: current && forecast?.isLive === true, generatedAt: Number.isFinite(generatedAt) ? generatedAt : null };
@@ -116,6 +124,7 @@ export class PortalClient {
     this.session = this.readSession();
     this.refreshing = null;
     this.sessionGeneration = 0;
+    this.accountGeneration = 0;
   }
 
   get signedIn() { return Boolean(this.session?.access_token && this.session?.refresh_token); }
@@ -127,8 +136,9 @@ export class PortalClient {
     } catch { return null; }
   }
 
-  saveSession(value) {
+  saveSession(value, { isRefresh = false } = {}) {
     this.sessionGeneration += 1;
+    if (!isRefresh) this.accountGeneration += 1;
     this.refreshing = null;
     this.session = value;
     if (value) this.storage.setItem(this.config.sessionKey, JSON.stringify(value));
@@ -219,11 +229,17 @@ export class PortalClient {
       const pending = this.auth("token?grant_type=refresh_token", { refresh_token: session.refresh_token })
         .then(value => {
           if (!stillCurrent()) throw new PortalError("Die Sitzung wurde geändert.", 401, "SESSION_CHANGED");
-          this.saveSession(value);
+          this.saveSession(value, { isRefresh: true });
           return value.access_token;
         })
         .catch(error => {
-          if (stillCurrent()) this.saveSession(null);
+          const revoked = error instanceof PortalError && (error.status === 401
+            || ([400, 403, 404].includes(error.status)
+              && ["refresh_token_not_found", "refresh_token_already_used", "session_not_found", "session_expired", "user_not_found", "user_banned"].includes(error.code)));
+          if (stillCurrent() && revoked) {
+            this.saveSession(null);
+            throw new PortalError("Deine Anmeldung ist abgelaufen. Bitte melde dich erneut an.", 401, error.code);
+          }
           throw error;
         });
       this.refreshing = pending;
@@ -293,7 +309,6 @@ export class PortalClient {
     }
   }
 
-  signals() { return this.publicRead("camera-signals"); }
   forecast() { return this.publicRead("forecast"); }
 
   async signOut() {
@@ -328,7 +343,8 @@ export class PortalClient {
     if (!response.ok) {
       const error = value?.error;
       const message = error?.message ?? value?.msg ?? value?.message ?? value?.error_description ?? "Der Dienst ist gerade nicht erreichbar. Bitte versuche es später erneut.";
-      throw new PortalError(message, response.status, error?.code ?? "REQUEST_FAILED");
+      const code = error?.code ?? value?.error_code ?? (typeof value?.code === "string" ? value.code : "REQUEST_FAILED");
+      throw new PortalError(message, response.status, code);
     }
     if (value === null) throw new PortalError("Der Dienst hat keine gültige Antwort geliefert.", 502, "INVALID_RESPONSE");
     return value;

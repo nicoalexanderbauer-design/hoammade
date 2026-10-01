@@ -1,4 +1,4 @@
-import { PortalClient, PortalError, buildProfilePayload, cameraSignalState, forecastState, formatMoney, normalizedServiceCode, normalizedTeamCode, safeReturnPath } from "./portal-core.mjs?v=20260924-1";
+import { PortalClient, PortalError, buildProfilePayload, forecastState, formatMoney, needsProfileSetup, normalizedServiceCode, normalizedTeamCode, safeReturnPath } from "./portal-core.mjs?v=20261001-android2";
 
 const client = new PortalClient();
 const authRedirect = client.consumeAuthRedirect(location.href);
@@ -76,6 +76,8 @@ async function copyText(value, successMessage) {
 }
 
 function handleError(error) {
+  // A late response belongs to the old account; it must never log out its replacement.
+  if (error instanceof PortalError && error.code === "SESSION_CHANGED") return;
   console.error(error);
   if (error instanceof PortalError && error.status === 401) {
     client.saveSession(null);
@@ -174,7 +176,7 @@ function showAuth() {
       closeModal();
       toast("Servus – du bist angemeldet.");
       renderAccount();
-      await showRoute(routeFromHash(location.hash).view);
+      await completeProfileAfterSignIn().catch(handleError);
     } catch (error) { message.className = "error"; message.textContent = error.message; }
     finally { submit.disabled = false; }
   });
@@ -247,6 +249,19 @@ async function ensureProfile() {
   return state.profile;
 }
 
+async function completeProfileAfterSignIn() {
+  const generation = client.accountGeneration;
+  const profile = await ensureProfile();
+  if (!client.signedIn || client.accountGeneration !== generation) return;
+  if (needsProfileSetup(profile)) {
+    history.pushState(null, "", "#/account");
+    await showRoute("account");
+    await showProfileEditor();
+  } else {
+    await showRoute(routeFromHash(location.hash).view);
+  }
+}
+
 function isOnline(profile) {
   return profile?.persistentDiscoverability === true ||
     Boolean(profile?.onlineUntil && new Date(profile.onlineUntil).getTime() > Date.now());
@@ -279,8 +294,13 @@ async function prepareJPEG(file) {
 
 async function showProfileEditor() {
   if (!client.signedIn) return showAuth();
-  try { if (state.profile && state.dating === null) state.dating = await client.community("dating-profile"); }
+  const generation = client.accountGeneration;
+  try {
+    await ensureProfile();
+    if (state.profile && state.dating === null) state.dating = await client.community("dating-profile");
+  }
   catch (error) { handleError(error); return; }
+  if (!client.signedIn || client.accountGeneration !== generation) return;
   const existing = state.profile;
   const dating = state.dating;
   const form = element("form", { class: "form-stack" });
@@ -325,29 +345,53 @@ async function showProfileEditor() {
   form.addEventListener("submit", async event => {
     event.preventDefault();
     const button = form.querySelector("button[type=submit]");
+    if (button.disabled) return;
+    const current = () => client.signedIn && client.accountGeneration === generation && form.isConnected;
+    const assertCurrent = () => {
+      if (!current()) throw new PortalError("Die Anmeldung wurde gewechselt. Bitte öffne das Profil erneut.", 401, "SESSION_CHANGED");
+    };
     button.disabled = true;
     try {
+      assertCurrent();
       const payload = buildProfilePayload({
         displayName: displayName.value, bio: bio.value, intent: intent.value,
         birthDate: birthDate.value, acceptedTerms: consent.checked,
         allowIntroductions: intros.checked, onlineMinutes: 0,
       }, Boolean(existing));
-      state.profile = await client.community("profile", { method: "PUT", body: payload });
-      state.dating = await client.community("dating-profile", { method: "PUT", body: { promptKey: prompt.value, promptAnswer: prompt.value ? promptAnswer.value.trim() : "" } });
-      state.dating = await client.community("dating-profile");
-      if (photo.files?.[0]) state.dating = await client.uploadPhoto(await prepareJPEG(photo.files[0]));
+      const promptPayload = { promptKey: prompt.value, promptAnswer: prompt.value ? promptAnswer.value.trim() : "" };
+      if (promptPayload.promptKey && !promptPayload.promptAnswer) throw new PortalError("Bitte beantworte die ausgewählte Profilfrage oder wähle „Keine Profilfrage“.");
+      const selectedPhoto = photo.files?.[0];
+      const savedProfile = await client.community("profile", { method: "PUT", body: payload });
+      assertCurrent();
+      state.profile = savedProfile;
+      const savedDating = await client.community("dating-profile", { method: "PUT", body: promptPayload });
+      assertCurrent();
+      state.dating = savedDating;
+      const refreshedDating = await client.community("dating-profile");
+      assertCurrent();
+      state.dating = refreshedDating;
+      if (selectedPhoto) {
+        const preparedPhoto = await prepareJPEG(selectedPhoto);
+        assertCurrent();
+        const uploaded = await client.uploadPhoto(preparedPhoto);
+        assertCurrent();
+        state.dating = uploaded;
+      }
       closeModal();
       toast("Profil sicher gespeichert.");
       await loadZam();
-    } catch (error) { result.className = "error"; result.textContent = error.message; }
+    } catch (error) {
+      if (current() && error.code !== "SESSION_CHANGED") { result.className = "error"; result.textContent = error.message; }
+    }
     finally { button.disabled = false; }
   });
   showModal(existing ? "Profil bearbeiten" : "Privates Profil anlegen", form);
 }
 
 async function updateVisibility(minutes) {
-  const profile = await ensureProfile();
-  if (!profile) return showProfileEditor();
+    const profile = await ensureProfile();
+    if (!profile) return showProfileEditor();
+    if (minutes && profile.intent === "none") return toast("Dein Profil bleibt ohne Kennenlern-Suche unsichtbar.");
   setBusy(true, minutes ? "Du wirst sichtbar …" : "Du wirst unsichtbar …");
   try {
     state.profile = await client.community("profile", { method: "PUT", body: {
@@ -379,13 +423,18 @@ async function loadZam() {
     content.hidden = false;
     const online = isOnline(profile);
     const persistent = profile.persistentDiscoverability === true;
+    const searching = profile.intent !== "none";
     gateNode.append(element("div", {}, [
-      element("h2", { text: online ? "Du bist sichtbar" : "Du bist unsichtbar" }),
-      element("p", { class: "muted", text: persistent
+      element("h2", { text: !searching ? "Ohne Kennenlern-Suche" : online ? "Du bist sichtbar" : "Du bist unsichtbar" }),
+      element("p", { class: "muted", text: !searching
+        ? "Dein Profil bleibt unsichtbar. Bestehende Verbindungen und Chats findest du unter Matches."
+        : persistent
         ? "Dein Profil bleibt auffindbar, bis du die Sichtbarkeit ausschaltest. Das sagt nichts über deine aktuelle Aktivität oder deinen Standort aus."
         : online ? "Die zeitlich begrenzte Sichtbarkeit endet automatisch. Du kannst sie jederzeit sofort beenden."
           : "Niemand Neues kann dein Profil gerade entdecken." }),
-      primary(online ? "Jetzt unsichtbar werden" : "Für 2 Stunden sichtbar werden", () => updateVisibility(online ? 0 : 120)),
+      ...(searching
+        ? [primary(online ? "Jetzt unsichtbar werden" : "Für 2 Stunden sichtbar werden", () => updateVisibility(online ? 0 : 120))]
+        : [secondary("Profil anpassen", showProfileEditor)]),
     ]));
     const [discover, matches] = await Promise.all([
       online && profile.intent !== "none" ? client.community("discover") : Promise.resolve([]),
@@ -476,23 +525,43 @@ async function likeProfile(profile) {
 }
 
 function reportProfile(profile) {
+  const generation = client.accountGeneration;
   const form = element("form", { class: "form-stack" });
+  const current = () => client.signedIn && client.accountGeneration === generation && form.isConnected;
+  let sending = false;
   const reason = element("select");
   for (const [value, label] of [["harassment", "Belästigung"], ["underage", "Verdacht auf Minderjährigkeit"], ["fake_profile", "Täuschendes Profil"], ["unsafe_content", "Unsicherer Inhalt"], ["scam", "Betrugsverdacht"], ["other", "Sonstiges"]]) reason.append(element("option", { value }, label));
   const detail = element("textarea", { maxlength: 1000, placeholder: "Kurze sachliche Beschreibung (optional)" });
   const result = element("p", { class: "help-text" });
+  const send = async blockOnly => {
+    if (sending || !current()) return;
+    sending = true;
+    for (const button of form.querySelectorAll("button")) button.disabled = true;
+    try {
+      await client.community(blockOnly ? "blocks" : "reports", { method: "POST", body: blockOnly
+        ? { targetID: profile.id }
+        : { targetID: profile.id, reason: reason.value, detail: detail.value.trim() } });
+      if (!current()) return;
+      if (blockOnly) {
+        state.matches = state.matches.filter(match => match.profile.id !== profile.id);
+        renderMatches();
+      }
+      dismissProfile(profile.id, false);
+      closeModal();
+      toast(blockOnly ? "Kontakt blockiert." : "Danke. Die Moderation prüft die Meldung.");
+    } catch (error) {
+      if (current() && error.code !== "SESSION_CHANGED") { result.className = "error"; result.textContent = error.message; }
+    } finally {
+      sending = false;
+      for (const button of form.querySelectorAll("button")) button.disabled = false;
+    }
+  };
   form.append(element("p", { text: `${profile.displayName} melden oder blockieren. Eine Meldung wird nur der Moderation gezeigt.` }), element("label", {}, ["Grund", reason]), element("label", {}, ["Details", detail]), result,
     element("button", { class: "primary", type: "submit" }, "Meldung senden"),
-    element("button", { class: "danger-button", type: "button", onclick: async () => {
-      try { await client.community("blocks", { method: "POST", body: { targetID: profile.id } }); closeModal(); dismissProfile(profile.id); toast("Kontakt blockiert."); }
-      catch (error) { result.className = "error"; result.textContent = error.message; }
-    } }, "Nur blockieren"));
+    element("button", { class: "danger-button", type: "button", onclick: () => send(true) }, "Nur blockieren"));
   form.addEventListener("submit", async event => {
     event.preventDefault();
-    try {
-      await client.community("reports", { method: "POST", body: { targetID: profile.id, reason: reason.value, detail: detail.value.trim() } });
-      closeModal(); dismissProfile(profile.id); toast("Danke. Die Moderation prüft die Meldung.");
-    } catch (error) { result.className = "error"; result.textContent = error.message; }
+    await send(false);
   });
   showModal("Melden oder blockieren", form);
 }
@@ -508,6 +577,7 @@ function renderMatches() {
 
 async function showChat(match) {
   const wrapper = element("div", { class: "form-stack" }, element("p", { class: "muted", text: "Respektvoll bleiben. Blockieren und Melden ist jederzeit möglich." }));
+  wrapper.append(secondary("Melden / blockieren", () => reportProfile(match.profile)));
   const log = element("div", { class: "chat-log", role: "log", "aria-live": "polite" });
   const form = element("form", { class: "form-stack" });
   const input = element("textarea", { required: true, maxlength: 1000, placeholder: "Nachricht …" });
@@ -791,6 +861,7 @@ async function loadTeamBoard(teamID) {
     for (const request of board.requests.filter(item => ["new", "accepted", "preparing"].includes(item.state))) {
       const actions = element("div", { class: "button-row" });
       if (request.state === "new") actions.append(primary("Annehmen", () => transitionRequest(teamID, request, "accepted")), secondary("Ablehnen", () => transitionRequest(teamID, request, "declined")));
+      else if (request.assigneeID !== ownID) actions.append(element("p", { class: "help-text", text: request.state === "preparing" ? "Wird von einem anderen Teammitglied vorbereitet." : "Von einem anderen Teammitglied angenommen." }));
       else if (request.state === "accepted") actions.append(primary(request.kind === "order" ? "In Vorbereitung" : "Erledigt", () => transitionRequest(teamID, request, request.kind === "order" ? "preparing" : "delivered")));
       else if (request.state === "preparing") actions.append(primary("Als gebracht bestätigen", () => transitionRequest(teamID, request, "delivered")));
       requests.append(element("article", { class: "panel-card" }, [element("h3", { text: request.kind === "order" ? `${request.quantity} × ${request.itemName}` : (request.kind === "payment" ? "Zahlen bitte" : "Bedienung gerufen") }), element("p", { class: "muted", text: `${request.areaLabel}${request.rowLabel ? ` · ${request.rowLabel}` : ""} · Tisch ${request.tableLabel}` }), actions]));
@@ -936,10 +1007,7 @@ async function loadSignals() {
   const list = clear($("#signal-list"));
   setBusy(true, "Lage wird geladen …");
   try {
-    const [forecastRequest, signalRequest] = await Promise.allSettled([client.forecast(), client.signals()]);
-    const forecast = forecastRequest.status === "fulfilled" ? forecastRequest.value : null;
-    const signals = signalRequest.status === "fulfilled" ? signalRequest.value : [];
-    const values = Array.isArray(signals) ? signals : [];
+    const forecast = await client.forecast();
     const now = Date.now();
     const forecastPresentation = forecastState(forecast, now);
     if (forecastPresentation.current) {
@@ -962,30 +1030,14 @@ async function loadSignals() {
     } else {
       forecastPanel.append(element("h2", { text: "Noch keine belastbare Tendenz" }), element("p", { class: "muted", text: "Der Prognosepool liefert nur zeitgestempelte Ergebnisse. Veraltete Antworten werden nicht angezeigt." }));
     }
-    if (!values.length) {
-      summary.append(element("h2", { text: "Noch keine aktuellen Messwerte" }), element("p", { class: "muted", text: "Die Kamera-Auswertung wird vorbereitet. Es werden keine Streams oder Einzelbilder in diesem Portal gezeigt." }));
-      return;
-    }
-    const fresh = values.filter(item => cameraSignalState(item, now).current);
-    summary.append(element("h2", { text: `${fresh.length} aktuelle Signale` }), element("p", { class: "muted", text: "Zuletzt automatisch aktualisiert. Quelle, Alter und Unsicherheit bleiben sichtbar." }));
-    for (const signal of values) {
-      const presentation = cameraSignalState(signal, now);
-      const time = presentation.observedAt !== null
-        ? new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit" }).format(new Date(presentation.observedAt))
-        : "kein aktueller Messwert";
-      const statusLabel = presentation.current ? signal.statusLabel : "Derzeit kein aktuelles Signal";
-      const confidenceLabel = presentation.current ? (signal.confidenceLabel ?? "Schätzung") : "kein aktueller Messwert";
-      const detail = presentation.current ? (signal.detail ?? "Anonymes Dichtesignal ohne Einlassgarantie.") : "Der Messwert ist nicht aktuell.";
-      const meterLabel = presentation.current ? `${statusLabel}: relativer Dichteindex ${presentation.level} von 100` : statusLabel;
-      list.append(element("article", { class: "signal-card" }, [
-        element("div", { class: "signal-top" }, [element("div", {}, [element("h2", { text: signal.label }), element("small", { class: "muted", text: presentation.observedAt !== null ? `Stand ${time}` : time })]), element("span", { class: "badge", text: confidenceLabel })]),
-        element("div", { class: "signal-meter", role: "img", "aria-label": meterLabel }, element("span", { style: `width:${presentation.level}%` })),
-        element("strong", { text: `${statusLabel}${presentation.current ? ` · Dichteindex ${presentation.level}/100` : ""}` }),
-        element("p", { class: "muted", text: detail }),
-      ]));
-    }
+    summary.append(element("h2", { text: "Datenquellen" }),
+      element("p", { class: "muted", text: "Allgemeines Besucher-Barometer sowie gültige Community- und Betreibermeldungen. Aktuelles Wetter und Wetterwarnungen ergänzen die Prognose, soweit verfügbar." }),
+      element("p", {}, [element("a", { href: "https://www.oktoberfest.de/informationen/barometer", text: "Offizielles Besucher-Barometer", target: "_blank", rel: "noopener noreferrer" }),
+        document.createTextNode(" · "), element("a", { href: "https://brightsky.dev/", text: "DWD-Wetter via Bright Sky", target: "_blank", rel: "noopener noreferrer" }),
+        document.createTextNode(" · "), element("a", { href: "https://creativecommons.org/licenses/by/4.0/", text: "DWD-Daten CC BY 4.0; für Lagehinweise verarbeitet", target: "_blank", rel: "noopener noreferrer" })]));
+
   } catch (error) {
-    summary.append(element("h2", { text: "Messdienst wird eingerichtet" }), element("p", { class: "muted", text: "Das Portal ist vorbereitet; bis zur geprüften Aktivierung werden keine Kamera-Auslastungswerte behauptet." }));
+    summary.append(element("h2", { text: "Prognose derzeit nicht verfügbar" }), element("p", { class: "muted", text: "Bitte später erneut versuchen. Gültige Meldungen und Quellen bleiben die Grundlage der Anzeige." }));
     if (error.status !== 404) console.warn(error);
   } finally { setBusy(false); }
 }
@@ -1123,4 +1175,7 @@ renderAccount();
 showRoute(authRedirect ? "account" : initial.view);
 if (authRedirect?.type === "recovery") showPasswordReset();
 else if (authRedirect?.type === "error") toast(authRedirect.message);
-else if (authRedirect) toast("E-Mail bestätigt – du bist jetzt angemeldet.");
+else if (authRedirect) {
+  toast("E-Mail bestätigt – du bist jetzt angemeldet.");
+  completeProfileAfterSignIn().catch(handleError);
+}
