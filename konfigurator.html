@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17372d">
+  <meta name="description" content="Gestalte dein Glupperl, deinen Untersetzer oder Glasanhänger mit Wunschtext, Schrift und Motiv. Mit direkter Vorschau und unverbindlicher Anfrage an HOAMMADE.">
+  <title>Dein Wunschstück gestalten — HOAMMADE</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="konfigurator.css?v=20261016-1">
+  <script src="konfigurator-core.js?v=20261016-1" defer></script>
+  <script src="konfigurator.js?v=20261016-1" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#gestaltung">Direkt zur Gestaltung</a>
+  <header class="config-header wrap">
+    <a class="brand" href="index.html" aria-label="HOAMMADE – Startseite">HOAMMADE</a>
+    <nav aria-label="Seitennavigation"><a href="index.html#wiesn">Zur Kollektion <span aria-hidden="true">↗</span></a><a href="mailto:nico@hoammade.de">Fragen? Schreib Nico.</a></nav>
+  </header>
+  <main class="wrap" id="gestaltung">
+    <div class="config-intro">
+      <div><p class="eyebrow">Deine Idee. Dein Detail.</p><h1>Mach’s zu <em>deinem.</em></h1></div>
+      <p>Wähl dein Lieblingsstück, gib ihm deinen Namen und probier deinen Stil aus.</p>
+    </div>
+    <noscript><div class="fallback-message">Für die direkte Vorschau brauchst du JavaScript. Du kannst deinen Wunsch auch direkt an <a href="mailto:nico@hoammade.de">nico@hoammade.de</a> schicken.</div></noscript>
+    <p id="load-error" class="fallback-message">Der Konfigurator wird geladen. Sollte er nicht erscheinen, <a href="mailto:nico@hoammade.de">schreib Nico direkt</a>.</p>
+    <form id="config-form" novalidate hidden>
+      <fieldset class="product-picker">
+        <legend><span>01</span> Dein Lieblingsstück</legend>
+        <div class="product-options">
+          <label class="product-option"><input type="radio" name="produkt" value="glupperl" checked><span class="product-content"><img src="assets/konfigurator/glupperl-384.jpg" width="1536" height="1024" alt=""><span><strong>Glupperl</strong><small>Für deine Tracht</small></span><span class="selection-tick" aria-hidden="true">✓</span></span></label>
+          <label class="product-option"><input type="radio" name="produkt" value="untersetzer"><span class="product-content"><img src="assets/konfigurator/untersetzer-384.jpg" width="1536" height="1024" alt=""><span><strong>Untersetzer</strong><small>Für deinen Tisch</small></span><span class="selection-tick" aria-hidden="true">✓</span></span></label>
+          <label class="product-option"><input type="radio" name="produkt" value="glasanhaenger"><span class="product-content"><img src="assets/konfigurator/glasanhaenger-384.jpg" width="1536" height="1024" alt=""><span><strong>Glasanhänger</strong><small>Für deine Runde</small></span><span class="selection-tick" aria-hidden="true">✓</span></span></label>
+        </div>
+      </fieldset>
+      <div class="config-layout">
+        <aside class="preview-pane" aria-labelledby="preview-heading">
+          <div class="preview-top"><p class="eyebrow">Dein Entwurf</p><span class="live-label">Live-Vorschau</span></div>
+          <div class="preview-stage">
+            <svg id="product-preview" viewBox="0 0 1536 1024" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="preview-accessible-title">
+              <title id="preview-accessible-title">Glupperl mit deinem Wunschtext</title>
+              <image id="preview-photo" href="assets/konfigurator/glupperl.jpg" x="0" y="0" width="1536" height="1024"/>
+              <g class="engraving"><text id="preview-name" x="1000" y="512" text-anchor="middle" dominant-baseline="middle">Dein Name</text><text id="preview-subline" text-anchor="middle" dominant-baseline="middle"></text><g id="preview-motif"><path id="motif-path"/></g></g>
+            </svg>
+            <button id="zoom-preview" class="zoom-button" type="button" aria-label="Vorschau vergrößern">Vergrößern <span aria-hidden="true">↗</span></button>
+          </div>
+          <div class="preview-copy"><h2 id="preview-heading">Dein Glupperl.</h2><p id="product-subtitle">Ein kleines Stück Tracht. Ganz persönlich.</p></div>
+          <div id="preview-names-control" class="preview-names-control" hidden><label for="preview-person">Vorschau für</label><select id="preview-person"></select></div>
+          <p class="preview-note">Illustrative Vorschau auf KI-generiertem Produktbild. Schrift, Material und genaue Ausführung stimmen wir mit dir ab.</p>
+          <div class="preview-promise"><strong>Deine Idee bleibt deine.</strong><p>Die Eingaben bleiben in diesem Browserfenster. Erst du entscheidest, was du per E-Mail sendest.</p></div>
+        </aside>
+        <div class="controls-pane">
+          <fieldset class="control-section">
+            <legend><span>02</span> Mach’s persönlich</legend>
+            <div class="mode-options">
+              <label><input type="radio" name="modus" value="einzeln" checked><span>Ein Wunschtext</span></label>
+              <label><input type="radio" name="modus" value="gruppe"><span>Mehrere Namen</span></label>
+            </div>
+            <div id="single-field" class="field">
+              <div class="label-row"><label for="personal-text">Dein Name oder Wunschtext <span class="required">*</span></label><span id="text-count" class="counter">0 / 18</span></div>
+              <input id="personal-text" type="text" placeholder="z. B. Nico" autocomplete="off" spellcheck="false" aria-describedby="text-hint text-error">
+              <p id="text-hint" class="hint">Bis zu 18 Zeichen. Groß- und Kleinschreibung bleibt erhalten.</p><p id="text-error" class="field-error" hidden></p>
+            </div>
+            <div id="group-field" class="field" hidden>
+              <div class="label-row"><label for="personal-names">Deine Namen <span class="required">*</span></label><span id="names-count" class="counter">0 Namen</span></div>
+              <textarea id="personal-names" rows="4" placeholder="Nico&#10;Lena&#10;Max" autocomplete="off" spellcheck="false" aria-describedby="names-hint names-error"></textarea>
+              <p id="names-hint" class="hint">Ein Name pro Zeile, bis zu 50 Namen. Schrift und Motiv gelten für alle.</p><p id="names-error" class="field-error" hidden></p>
+            </div>
+            <div id="subline-field" class="field" hidden>
+              <div class="label-row"><label for="personal-subline">Zweite Zeile <span class="optional">optional</span></label><span id="subline-count" class="counter">0 / 30</span></div>
+              <input id="personal-subline" type="text" placeholder="z. B. Schön, dass du da bist." autocomplete="off" spellcheck="false" aria-describedby="subline-hint subline-error">
+              <p id="subline-hint" class="hint">Bei mehreren Namen steht diese Zeile auf jedem Untersetzer.</p><p id="subline-error" class="field-error" hidden></p>
+            </div>
+            <label class="checkbox-line"><input id="uppercase" type="checkbox"><span>Alles in Großbuchstaben</span></label>
+          </fieldset>
+          <fieldset class="control-section">
+            <legend><span>03</span> Dein Stil</legend>
+            <fieldset class="mini-fieldset"><legend>Schriftstil</legend>
+              <div class="style-options">
+                <label><input type="radio" name="schrift" value="klassisch" checked><span><b class="font-classic">Aa</b><small>Klassisch</small></span></label>
+                <label><input type="radio" name="schrift" value="klar"><span><b class="font-clear">Aa</b><small>Klar</small></span></label>
+                <label><input type="radio" name="schrift" value="elegant"><span><b class="font-elegant">Aa</b><small>Elegant</small></span></label>
+              </div>
+            </fieldset>
+            <fieldset class="mini-fieldset"><legend>Kleines Motiv</legend>
+              <div class="motif-options">
+                <label><input type="radio" name="motiv" value="ohne" checked><span>Ohne</span></label>
+                <label><input type="radio" name="motiv" value="herz"><span><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/></svg> Herz</span></label>
+                <label><input type="radio" name="motiv" value="stern"><span><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.56.56 0 0 0-.163-.505L1.71 6.745l4.052-.576a.53.53 0 0 0 .393-.288L8 2.223l1.847 3.658a.53.53 0 0 0 .393.288l4.052.575-2.906 2.77a.56.56 0 0 0-.163.506l.694 3.957-3.686-1.894a.5.5 0 0 0-.461 0z"/></svg> Stern</span></label>
+              </div>
+            </fieldset>
+          </fieldset>
+          <div class="quantity-section">
+            <div><label id="quantity-label" for="quantity">Anzahl</label><p id="quantity-hint" class="hint">Mit demselben Wunschtext.</p></div>
+            <div class="stepper"><button type="button" id="quantity-minus" aria-label="Anzahl verringern">−</button><input id="quantity" type="number" min="1" max="999" step="1" value="1" inputmode="numeric" aria-describedby="quantity-hint quantity-error"><button type="button" id="quantity-plus" aria-label="Anzahl erhöhen">+</button></div>
+            <p id="quantity-error" class="field-error" hidden></p>
+          </div>
+          <details id="extras" class="extras"><summary>Noch ein Wunsch? <span>Termin & Anmerkungen</span></summary>
+            <div class="field"><label for="wish-date">Wunschtermin <span class="optional">optional</span></label><input id="wish-date" type="date" aria-describedby="date-hint date-error"><p id="date-hint" class="hint">Ob der Termin möglich ist, bestätigen wir persönlich.</p><p id="date-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="notes">Was ist dir noch wichtig? <span class="optional">optional</span></label><textarea id="notes" rows="3" placeholder="Ein eigenes Motiv, eine besondere Farbe oder eine Frage …" aria-describedby="notes-hint notes-error"></textarea><p id="notes-hint" class="hint">Bis zu 600 Zeichen. Ein eigenes Motiv kannst du später deiner E-Mail anhängen.</p><p id="notes-error" class="field-error" hidden></p></div>
+          </details>
+          <p id="form-error" class="form-error" role="alert" hidden></p>
+          <div class="request-bar">
+            <div class="request-total"><strong id="quantity-summary">Dein Glupperl</strong><span>Preis auf Anfrage</span></div>
+            <div class="request-actions"><button id="mobile-preview" class="button button-outline" type="button">Vorschau</button><button type="submit" class="button button-primary">Anfrage prüfen <span aria-hidden="true">↗</span></button></div>
+          </div>
+          <p class="request-note">Unverbindlich. Du prüfst zuerst alle Angaben und entscheidest dann, ob du deine Anfrage per E-Mail abschickst.</p>
+        </div>
+      </div>
+    </form>
+    <section class="config-bottom" aria-labelledby="good-to-know"><h2 id="good-to-know">Gut zu wissen.</h2>
+      <details><summary>Wie geht es nach der Anfrage weiter?</summary><p>Nico schaut sich deinen Entwurf an und meldet sich zu Ausführung, Preis und Termin. Mit dem Konfigurator bestellst und bezahlst du noch nichts.</p></details>
+      <details><summary>Kann ich ein eigenes Motiv verwenden?</summary><p>Ja, schreib deinen Wunsch in die Anmerkung und hänge das Motiv deiner E-Mail an. Im Konfigurator siehst du die Motive Herz und Stern als Gestaltungsvorschlag.</p></details>
+      <details><summary>Bleibt mein Entwurf gespeichert?</summary><p>Während du zwischen den drei Produkten wechselst, bleiben deine Eingaben im geöffneten Fenster erhalten. Beim Neuladen werden sie zurückgesetzt. Du kannst die fertige Anfrage als Textdatei herunterladen.</p></details>
+    </section>
+  </main>
+  <footer class="config-footer wrap"><span>© 2026 HOAMMADE</span><div><a href="index.html#wiesn">Zur Kollektion</a><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a></div></footer>
+  <dialog id="zoom-dialog" class="zoom-dialog" aria-labelledby="zoom-title"><div class="dialog-heading"><h2 id="zoom-title">Dein Entwurf im Detail.</h2><button type="button" class="close-button" data-close="zoom-dialog" aria-label="Vorschau schließen">×</button></div><div id="zoom-content"></div><p class="hint">Illustrative Vorschau. Die genaue Ausführung stimmen wir persönlich ab.</p></dialog>
+  <dialog id="request-dialog" class="request-dialog" aria-labelledby="request-title">
+    <div class="dialog-heading"><div><p class="eyebrow">Fast bei Nico.</p><h2 id="request-title">Alles richtig?</h2></div><button type="button" class="close-button" data-close="request-dialog" aria-label="Zusammenfassung schließen">×</button></div>
+    <p class="dialog-intro">Prüfe deinen Entwurf. Danach öffnest du deine E-Mail mit der vorbereiteten Anfrage.</p>
+    <div class="summary-product"><strong id="summary-product"></strong><span id="summary-total"></span></div>
+    <div id="summary-names" class="summary-names"></div>
+    <dl id="summary-details" class="summary-details"></dl>
+    <div id="long-request-note" class="long-request-note" hidden><strong>Viele Namen? Alles kommt mit.</strong><p>Dein Entwurf ist für manche E-Mail-Programme zu lang. Kopiere den vollständigen Text oder lade ihn herunter und füge ihn deiner E-Mail hinzu.</p></div>
+    <div class="summary-tools"><button id="copy-request" type="button">Anfragetext kopieren</button><button id="download-request" type="button">Als Textdatei speichern</button></div>
+    <div id="manual-copy" hidden><label for="request-text">Vollständiger Anfragetext zum Kopieren</label><textarea id="request-text" rows="7" readonly></textarea></div>
+    <p id="copy-status" class="status-message" role="status"></p>
+    <a id="email-request" class="button button-primary email-request" href="mailto:nico@hoammade.de">E-Mail an Nico öffnen <span aria-hidden="true">↗</span></a>
+    <p class="dialog-footnote">Empfänger: <strong>nico@hoammade.de</strong><br>Der Versand erfolgt erst in deinem E-Mail-Programm. Kein E-Mail-Programm eingerichtet? Nutze Kopieren oder Download und dein Webmail.</p>
+    <button type="button" class="back-to-design" data-close="request-dialog">Entwurf weiter bearbeiten</button>
+  </dialog>
+</body>
+</html>
