@@ -851,11 +851,12 @@ footer {
 
 .wiesn-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 32px;
 }
 
 .wiesn-product {
+  scroll-margin-top: 28px;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -892,7 +893,7 @@ footer {
 .wiesn-product h3 {
   margin: 0 0 16px;
   font-family: "Iowan Old Style", "Palatino Linotype", Baskerville, Georgia, serif;
-  font-size: clamp(1.9rem, 2.8vw, 3rem);
+  font-size: clamp(1.7rem, 2.1vw, 2.45rem);
   font-weight: 500;
   letter-spacing: -.035em;
   line-height: 1.1;
@@ -1005,6 +1006,65 @@ footer {
   .wiesn-note {
     margin-top: 36px;
   }
+}
+
+
+/* Product-category navigation and a sixth tile for custom requests. */
+.home-page .wiesn-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -15px 0 42px;
+}
+.wiesn-categories a,
+.wiesn-categories a:first-child {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 11px 17px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: .85rem;
+  line-height: 1.25;
+  background: var(--paper);
+}
+.wiesn-categories a::after { content: none; }
+.wiesn-categories a:hover {
+  background: var(--forest);
+  color: var(--white);
+}
+.wiesn-grid { row-gap: 54px; }
+.wiesn-custom {
+  justify-content: space-between;
+  gap: 30px;
+  padding: clamp(26px, 3vw, 42px);
+  background: var(--forest);
+  color: var(--white);
+}
+.wiesn-custom .wiesn-kicker { color: var(--sage); }
+.wiesn-custom h3 {
+  max-width: 260px;
+  font-size: clamp(2.8rem, 4vw, 4.5rem);
+}
+.wiesn-custom > div > p {
+  margin: 24px 0 0;
+  color: #cdd5c8;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.wiesn-custom .wiesn-link {
+  align-self: flex-start;
+  color: var(--white);
+  border-color: var(--sage);
+  margin-top: 0;
+}
+@media (min-width: 721px) and (max-width: 1100px) {
+  .wiesn-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .home-page .wiesn-categories { margin-top: -6px; gap: 9px; }
+  .wiesn-categories a { padding-inline: 14px; }
+  .wiesn-custom { min-height: 350px; }
 }
 
 /* Legal pages */
