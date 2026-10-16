@@ -3,22 +3,22 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="HOAMMADE ist ein unabhängiges Studio für Gestaltung, Technik und Dinge, die es noch nicht gibt.">
+    <meta name="description" content="HOAMMADE: Kreativstudio aus Bayern. Entdecke unsere Designideen für persönliche Wiesn-Glupperl und Accessoires – und frag dein Wunschstück an.">
     <meta name="theme-color" content="#17372d">
     <title>HOAMMADE — Dahoam gedacht. Für morgen gemacht.</title>
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=wiesn-20261016">
   </head>
-  <body>
+  <body class="home-page">
     <main>
       <section class="hero" id="top">
         <header class="site-header shell">
           <a class="wordmark" href="#top" aria-label="HOAMMADE – Startseite">HOAMMADE</a>
           <nav aria-label="Hauptnavigation">
             <a href="#studio">Studio</a>
+            <a href="#wiesn">Wiesn</a>
             <a href="#ideen">Ideen</a>
             <a href="zelttracker/index.html">ZeltTracker</a>
-            <a href="https://hoammade.sumupstore.com/" target="_blank" rel="noopener noreferrer">Shop ↗</a>
             <a href="#kontakt">Kontakt</a>
           </nav>
         </header>
@@ -28,8 +28,8 @@
             <p class="eyebrow">Kreativstudio <span>·</span> Bayern</p>
             <h1>Dahoam gedacht.<br>Für morgen gemacht.</h1>
             <p class="hero-lede">Ein unabhängiges Studio für Gestaltung, Technik und Dinge, die es noch nicht gibt.</p>
-            <a class="button button-primary" href="https://hoammade.sumupstore.com/" target="_blank" rel="noopener noreferrer">
-              <span>Zum Shop</span>
+            <a class="button button-primary" href="#wiesn">
+              <span>Wiesn entdecken</span>
               <svg aria-hidden="true" viewBox="0 0 32 18" fill="none"><path d="M1 9h27M21 1l8 8-8 8" stroke="currentColor" stroke-width="1.8"/></svg>
             </a>
           </div>
@@ -38,7 +38,47 @@
           </div>
         </div>
 
-        <a class="scroll-cue" href="#studio" aria-label="Zum Studio scrollen"><span>Weiter</span><span class="scroll-line"></span></a>
+        <a class="scroll-cue" href="#wiesn" aria-label="Zu Glupperln und Accessoires scrollen"><span>Weiter</span><span class="scroll-line"></span></a>
+      </section>
+
+      <section class="wiesn section" id="wiesn" aria-labelledby="wiesn-title">
+        <div class="shell">
+          <div class="wiesn-heading">
+            <div>
+              <p class="eyebrow">Wiesn · Auf deine Art</p>
+              <h2 id="wiesn-title">Kleine Dinge.<br>Große Wiesn-Liebe.</h2>
+            </div>
+            <p>Persönliche Glupperl und kleine Accessoires, die Tracht zu deiner machen. Entdecke unsere Gestaltungsideen – und erzähl uns, was zu dir passt.</p>
+          </div>
+
+          <div class="wiesn-grid">
+            <article class="wiesn-product" aria-labelledby="glupperl-title">
+              <figure class="wiesn-figure">
+                <img src="assets/wiesn/glupperl-1536.jpg" srcset="assets/wiesn/glupperl-768.jpg 768w, assets/wiesn/glupperl-1536.jpg 1536w" sizes="(max-width: 720px) calc(100vw - 36px), (max-width: 1520px) calc((100vw - 112px) / 2), 704px" width="1536" height="1024" loading="lazy" decoding="async" alt="Designbeispiel: zwei Glupperl aus hellem Holz mit den Namen Nico und Lena, eines mit Edelweiß, auf naturfarbenem Leinen.">
+              </figure>
+              <div class="wiesn-product-copy">
+                <p class="wiesn-kicker">01 / Wiesn-Glupperl</p>
+                <h3 id="glupperl-title">Dein Name. Dein Glupperl.</h3>
+                <p>Helles Holz, klare Schrift und ein kleines Detail mit Heimatgefühl. Dein Name, ein Spitzname oder ein kurzer Spruch machen die Idee persönlich.</p>
+                <a class="wiesn-link" href="mailto:bauer@hoammade.de?subject=Anfrage%3A%20Wiesn-Glupperl&amp;body=Servus%20HOAMMADE%2C%0A%0Aich%20interessiere%20mich%20f%C3%BCr%20ein%20Glupperl.%0A%0AWunschtext%3A%20%0AAnzahl%3A%20%0AWunschtermin%3A%20%0A">Glupperl anfragen <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+
+            <article class="wiesn-product" aria-labelledby="accessoires-title">
+              <figure class="wiesn-figure">
+                <img src="assets/wiesn/accessoires-1536.jpg" srcset="assets/wiesn/accessoires-768.jpg 768w, assets/wiesn/accessoires-1536.jpg 1536w" sizes="(max-width: 720px) calc(100vw - 36px), (max-width: 1520px) calc((100vw - 112px) / 2), 704px" width="1536" height="1024" loading="lazy" decoding="async" alt="Designbeispiel: tannengrüner Filz-Schlüsselanhänger mit cognacfarbenem Leder sowie Edelweiß- und Brezn-Anstecker.">
+              </figure>
+              <div class="wiesn-product-copy">
+                <p class="wiesn-kicker">02 / Wiesn-Accessoires</p>
+                <h3 id="accessoires-title">Ein kleines Stück dahoam.</h3>
+                <p>Tannengrüner Filz, warme Ledertöne und dezente Wiesn-Motive. Ideen für Schlüsselanhänger und Anstecker, die auch nach dem Fest bleiben.</p>
+                <a class="wiesn-link" href="mailto:bauer@hoammade.de?subject=Anfrage%3A%20Wiesn-Accessoires&amp;body=Servus%20HOAMMADE%2C%0A%0Aich%20interessiere%20mich%20f%C3%BCr%20Wiesn-Accessoires.%0A%0AMeine%20Idee%3A%20%0AAnzahl%3A%20%0AWunschtermin%3A%20%0A">Accessoires anfragen <span aria-hidden="true">↗</span></a>
+              </div>
+            </article>
+          </div>
+
+          <p class="wiesn-note">KI-generierte Designbeispiele. Ausführung, Personalisierung und Verfügbarkeit stimmen wir auf Anfrage ab.</p>
+        </div>
       </section>
 
       <section class="studio section shell" id="studio">
@@ -94,3 +134,4 @@
     </main>
   </body>
 </html>
+

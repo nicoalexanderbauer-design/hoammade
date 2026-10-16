@@ -817,6 +817,196 @@ footer {
   }
 }
 
+/* Wiesn collection: editorial product studies, no checkout or stock claims. */
+.wiesn {
+  background: var(--paper);
+  scroll-margin-top: 24px;
+}
+
+.wiesn-heading {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  align-items: end;
+  gap: 64px;
+  margin-bottom: 58px;
+}
+
+.wiesn .eyebrow,
+.wiesn-kicker {
+  color: #56664e;
+}
+
+.wiesn-heading h2 {
+  font-size: clamp(3.4rem, 5.9vw, 6.6rem);
+  line-height: .97;
+}
+
+.wiesn-heading > p {
+  max-width: 430px;
+  margin: 0 0 5px;
+  color: #4e554f;
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.wiesn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px;
+}
+
+.wiesn-product {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wiesn-figure {
+  margin: 0;
+  background: var(--cream);
+}
+
+.wiesn-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+
+.wiesn-product-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 28px 0 0;
+}
+
+.wiesn-kicker {
+  margin: 0 0 15px;
+  font-size: .73rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+.wiesn-product h3 {
+  margin: 0 0 16px;
+  font-family: "Iowan Old Style", "Palatino Linotype", Baskerville, Georgia, serif;
+  font-size: clamp(1.9rem, 2.8vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1.1;
+}
+
+.wiesn-product-copy > p:not(.wiesn-kicker) {
+  max-width: 510px;
+  margin: 0 0 23px;
+  color: #4e554f;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.wiesn-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 44px;
+  margin-top: auto;
+  padding-block: 10px;
+  border-bottom: 1px solid var(--orange);
+  color: var(--forest);
+  font-weight: 700;
+}
+
+.wiesn-link span {
+  font-size: 1.25rem;
+}
+
+.wiesn-link:hover {
+  border-color: var(--forest);
+}
+
+.home-page a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 5px;
+}
+
+.wiesn-note {
+  margin: 42px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  color: #5c625d;
+  font-size: .8rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 1000px) {
+  .wiesn-heading {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .wiesn-heading > p {
+    max-width: 580px;
+  }
+
+  .home-page nav {
+    gap: 22px;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-page .site-header {
+    height: auto;
+    min-height: 112px;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-block: 22px 14px;
+  }
+
+  .home-page nav {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+  }
+
+  .home-page .hero-inner {
+    min-height: calc(100svh - 112px);
+    padding-top: 50px;
+  }
+
+  .home-page .legal-links {
+    flex-wrap: wrap;
+  }
+
+  .wiesn-heading {
+    gap: 24px;
+    margin-bottom: 36px;
+  }
+
+  .wiesn-heading h2 {
+    font-size: clamp(2.75rem, 11.4vw, 4.8rem);
+  }
+
+  .wiesn-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .wiesn-product-copy {
+    padding-top: 23px;
+  }
+
+  .wiesn-product h3 {
+    font-size: clamp(1.85rem, 7.5vw, 2.8rem);
+  }
+
+  .wiesn-note {
+    margin-top: 36px;
+  }
+}
+
 /* Legal pages */
 .legal-links {
   display: flex;
@@ -944,3 +1134,4 @@ footer {
     gap: 16px;
   }
 }
+
